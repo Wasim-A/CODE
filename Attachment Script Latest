@@ -1,0 +1,70 @@
+import com.atlassian.jira.issue.history.ChangeItemBean
+import com.atlassian.jira.issue.MutableIssue
+import com.atlassian.jira.issue.IssueManager
+import com.atlassian.jira.component.ComponentAccessor
+import com.atlassian.jira.issue.AttachmentManager
+import com.atlassian.jira.issue.Issue
+import com.atlassian.jira.issue.attachment.Attachment
+import com.atlassian.jira.user.ApplicationUser
+import com.atlassian.jira.event.type.EventDispatchOption
+import org.apache.log4j.Level
+import org.apache.log4j.Logger
+import com.atlassian.jira.issue.attachment.CreateAttachmentParamsBean
+
+IssueManager issueManager = ComponentAccessor.issueManager
+
+MutableIssue issue = issueManager.getIssueObject("DL-6893")
+
+ApplicationUser currentUser = ComponentAccessor.getJiraAuthenticationContext().getLoggedInUser()
+AttachmentManager attachmentManager = ComponentAccessor.getAttachmentManager()
+Collection<Attachment> attachments = new ArrayList<Attachment>()
+attachments = issue.getAttachments()
+Collection<Issue> subTasks = issue.getSubTaskObjects()
+subTasks.each{subtsk -> 
+log.warn("Subtask : "+ subtsk.toString())
+MutableIssue sbtask = ComponentAccessor.getIssueManager().getIssueObject(subtsk.toString())
+List<Attachment> child_attachment = attachmentManager.getAttachments(sbtask)
+//log.warn("Subtask Attachments"+child_attachment.toString())
+def child_attachments_lst = []
+child_attachment.each{ch_attach ->
+    child_attachments_lst.add(ch_attach.getFilename())
+}
+log.warn(child_attachments_lst)
+attachments.each{ attchment ->
+// log.warn("Attachment: " + attchment.getFilename())
+  //log value = child_attachment.find {element -> element.toString() == attachments.toString()}
+ if(!child_attachments_lst.contains(attchment.getFilename())){
+    // log.warn(attchment.getFilename());
+    // log.warn(attchment.mimetype)
+    // log.warn(attchment.getAuthor())
+
+    /* Create Attachment Script */
+    // String pathToFile = "http://localhost:8080/attachment/"
+    // String fileName = attchment.getFilename()
+    // String fileId = attchment.getId()
+    // String pathAndFile = pathToFile+fileId+"/"+fileName
+    
+    // def bean = new CreateAttachmentParamsBean.Builder()
+    // .file(new File(pathAndFile))
+    // .filename(attchment.getFilename())
+    // .contentType(attchment.mimetype)
+    // // .author("admin")
+    // .issue(subtsk)
+    // .copySourceFile(true)//you must do this otherwise it deletes the source file from the file system
+    // .build()
+    // attachmentManager.createAttachment(bean)
+
+        attachmentManager.copyAttachment(attchment, currentUser, subtsk.toString())
+                
+} 
+}
+}
+
+// log.warn(attachments.toString())
+// log.warn("Subtask : "+ subTasks)
+
+//  subTasks.each { i -> 
+//     def element = subTasks[i
+
+
+// }
